@@ -1,0 +1,72 @@
+name: Device compatibility test
+description: Report a manual or post-reboot test on a Realme, Oppo or OnePlus device
+title: "[Device test] "
+labels:
+  - device-test
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not attach full UI dumps or screenshots containing personal information.
+  - type: input
+    id: phone
+    attributes:
+      label: Phone model
+      placeholder: Realme GT 6 RMX3851
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Firmware build
+      placeholder: RMX3851_16.0.5.1010(EX01)
+    validations:
+      required: true
+  - type: input
+    id: system_launcher
+    attributes:
+      label: System Launcher version
+      description: Find this in the System Launcher app information screen.
+    validations:
+      required: true
+  - type: input
+    id: third_party_launcher
+    attributes:
+      label: Third-party launcher and version
+      placeholder: Smart Launcher 6.6 build 012
+    validations:
+      required: true
+  - type: dropdown
+    id: navigation
+    attributes:
+      label: Navigation mode
+      options:
+        - Three-button navigation
+        - Gesture navigation
+    validations:
+      required: true
+  - type: dropdown
+    id: manual
+    attributes:
+      label: Did Run fix now remove the Home-button delay?
+      options:
+        - "Yes"
+        - "No"
+        - The app reported a safe failure
+    validations:
+      required: true
+  - type: dropdown
+    id: reboot
+    attributes:
+      label: Did the fix run after a cold reboot and first unlock?
+      options:
+        - "Yes"
+        - "No"
+        - Not tested
+    validations:
+      required: true
+  - type: textarea
+    id: observations
+    attributes:
+      label: Observations
+      description: Describe timing, visible transitions and any side effect. Remove personal information.

@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Launcher Lag Guard</string>
+    <string name="service_name">Launcher Lag Guard</string>
+    <string name="service_description">After a reboot, dismisses only the Oplus System Launcher card from Recents to remove third-party Home-button lag.</string>
+</resources>
