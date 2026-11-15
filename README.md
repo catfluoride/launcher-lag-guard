@@ -55,6 +55,60 @@ The implementation has several deliberate limits:
 The sequence is visible for a few seconds after the first unlock: System
 Launcher opens, Recents appears briefly, then the selected Home screen returns.
 
+## Experimental replacement gestures (v1.3)
+
+**Scope:** OxygenOS / ColorOS / realmeUI with a third-party Home launcher.
+This does *not* repair Android's native gesture animation; instead it keeps
+**three-button mode** internally and triggers accessibility global actions
+from small touch targets. Tested in CI for compilation, **not yet verified
+on OnePlus 12R with OxygenOS 16.0.5.1301**.
+
+1. Set your preferred launcher as default and change Android navigation to
+   **three-button mode**.
+2. Enable Launcher Lag Guard in Accessibility settings.
+3. In Launcher Lag Guard choose **Run fix now** to remove the stock launcher
+   Recents task if the Home button is laggy.
+4. Tap **Enable replacement gestures**. Touch targets are deliberately
+   low-contrast and limited in area:
+   - Swipe up from the bottom-center strip: **Home**.
+   - Swipe up from that strip and hold after moving: **Recents**.
+   - Swipe inward from a narrow left or right edge: **Back**.
+5. **Test all three with the actual Android navigation buttons still visible.**
+   If your preferred apps do not tolerate the touch targets, disable this
+   experimental option in the app.
+
+The touch strips can consume taps and swipes near screen edges, and unlike
+native Quickstep they do not implement predictive-back or app-to-home
+animations. They automatically disappear at the lock screen and temporarily
+during the boot-time Recents cleanup.
+
+### Optional: hide the buttons without root
+
+After confirming the replacement gestures work, use **one** of:
+
+- From a computer with USB debugging: `adb shell cmd overlay enable com.android.internal.systemui.navbar.gestural`
+- From a suitably authorised Shizuku shell on the device:
+  `cmd overlay enable com.android.internal.systemui.navbar.gestural`
+
+The exact overlay command is taken from OxygenOS 16 community reports, not
+verified on all firmware builds. It cannot be run automatically by this APK:
+ordinary apps lack Android's privileged overlay-management permission.
+The overlay choice may revert after restart, so you may need to repeat it.
+
+**Recovery (computer):**
+
+```bash
+adb shell cmd overlay disable com.android.internal.systemui.navbar.gestural
+```
+
+If the buttons do not return, open Android's **System navigation** settings
+and choose three-button mode again. ADB can also be used to uninstall the
+app. Never hide the buttons before confirming another means of navigation
+works; doing so could make navigation difficult until you reconnect ADB.
+
+The service has no Internet permission, does not collect touch traces and
+does not try to disable the system launcher.
+
 ## Build
 
 Requirements:
