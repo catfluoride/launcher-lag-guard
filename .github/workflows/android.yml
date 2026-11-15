@@ -22,3 +22,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
       - name: Build and lint
         run: ./gradlew --no-daemon lintDebug assembleDebug
+      - name: Upload installable debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: LauncherLagGuard-1.2-debug
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 30
