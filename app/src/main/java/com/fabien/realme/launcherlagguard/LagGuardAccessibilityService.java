@@ -31,6 +31,18 @@ public final class LagGuardAccessibilityService extends AccessibilityService {
     private final Runnable maybeRunTask = this::maybeRun;
     private boolean running;
     private int scanAttempts;
+    private GestureOverlayController gestureOverlays;
+
+    static void refreshGestureControls() {
+        LagGuardAccessibilityService current = instance;
+        if (current != null) {
+            current.handler.post(() -> {
+                if (current.gestureOverlays != null) {
+                    current.gestureOverlays.retry();
+                }
+            });
+        }
+    }
 
     static void kick() {
         LagGuardAccessibilityService current = instance;
@@ -43,11 +55,16 @@ public final class LagGuardAccessibilityService extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
         instance = this;
+        gestureOverlays = new GestureOverlayController(this);
+        gestureOverlays.refresh();
         handler.postDelayed(maybeRunTask, 1500);
     }
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+        if (gestureOverlays != null) {
+            gestureOverlays.refresh();
+        }
         if (GuardState.isPending(this) && !running) {
             handler.removeCallbacks(maybeRunTask);
             handler.postDelayed(maybeRunTask, 500);
@@ -65,6 +82,10 @@ public final class LagGuardAccessibilityService extends AccessibilityService {
             instance = null;
         }
         handler.removeCallbacksAndMessages(null);
+        if (gestureOverlays != null) {
+            gestureOverlays.close();
+            gestureOverlays = null;
+        }
         super.onDestroy();
     }
 
@@ -82,6 +103,9 @@ public final class LagGuardAccessibilityService extends AccessibilityService {
         }
 
         running = true;
+        if (gestureOverlays != null) {
+            gestureOverlays.setSuspended(true);
+        }
         scanAttempts = 0;
         GuardState.report(this, "Running: waiting for the launcher UI to settle");
         handler.postDelayed(this::startLauncher, 5000);
@@ -216,6 +240,9 @@ public final class LagGuardAccessibilityService extends AccessibilityService {
                     GuardState.finish(LagGuardAccessibilityService.this,
                             "Success: System Launcher card dismissed");
                     running = false;
+                    if (gestureOverlays != null) {
+                        gestureOverlays.setSuspended(false);
+                    }
                 }, 350);
             }
 
@@ -261,6 +288,9 @@ public final class LagGuardAccessibilityService extends AccessibilityService {
         performGlobalAction(GLOBAL_ACTION_HOME);
         GuardState.finish(this, "Failed safely: " + message);
         running = false;
+        if (gestureOverlays != null) {
+            gestureOverlays.setSuspended(false);
+        }
     }
 
     @SuppressWarnings("deprecation")
