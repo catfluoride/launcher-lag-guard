@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,6 +21,8 @@ import java.util.List;
 
 public final class MainActivity extends Activity {
     private TextView status;
+    private TextView gestureStatus;
+    private Button gestureButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,7 +75,56 @@ public final class MainActivity extends Activity {
         runButton.setOnClickListener(v -> runNow());
         root.addView(runButton, matchWrap());
 
-        return root;
+        TextView gestureHeading = new TextView(this);
+        gestureHeading.setText("Experimental replacement gestures");
+        gestureHeading.setTextSize(20);
+        gestureHeading.setTextColor(Color.BLACK);
+        gestureHeading.setPadding(0, dp(24), 0, dp(8));
+        root.addView(gestureHeading, matchWrap());
+
+        TextView instructions = new TextView(this);
+        instructions.setText("Use OxygenOS THREE-BUTTON mode. Enable the gesture targets below. "
+                + "Test them while the navigation buttons are still visible. "
+                + "Swipe up from the faint bottom strip for Home; swipe up and hold for Recents; "
+                + "swipe inward from either faint side strip for Back. "
+                + "The strips may intercept app content near the edges.");
+        instructions.setTextSize(15);
+        instructions.setTextColor(Color.DKGRAY);
+        root.addView(instructions, matchWrap());
+
+        gestureStatus = new TextView(this);
+        gestureStatus.setTextSize(15);
+        gestureStatus.setTextColor(Color.BLACK);
+        gestureStatus.setPadding(0, dp(12), 0, dp(8));
+        root.addView(gestureStatus, matchWrap());
+
+        gestureButton = new Button(this);
+        gestureButton.setOnClickListener(v -> {
+            boolean next = !GuardState.gesturesEnabled(this);
+            GuardState.setGesturesEnabled(this, next);
+            LagGuardAccessibilityService.refreshGestureControls();
+            refreshStatus();
+        });
+        root.addView(gestureButton, matchWrap());
+
+        TextView advanced = new TextView(this);
+        advanced.setText("OPTIONAL, ONLY AFTER TESTING:\n"
+                + "Hide the system buttons with a computer (USB debugging):\n"
+                + "adb shell cmd overlay enable com.android.internal.systemui.navbar.gestural\n\n"
+                + "Restore buttons using:\n"
+                + "adb shell cmd overlay disable com.android.internal.systemui.navbar.gestural\n\n"
+                + "These commands require ADB or an authorised Shizuku shell and may reset "
+                + "on restart. If navigating becomes difficult, restore the buttons via ADB. "
+                + "This app cannot run either command without system privileges.");
+        advanced.setTextSize(14);
+        advanced.setTextColor(Color.DKGRAY);
+        advanced.setTextIsSelectable(true);
+        advanced.setPadding(0, dp(20), 0, dp(10));
+        root.addView(advanced, matchWrap());
+
+        ScrollView scroll = new ScrollView(this);
+        scroll.addView(root);
+        return scroll;
     }
 
     private void runNow() {
@@ -90,6 +142,12 @@ public final class MainActivity extends Activity {
     private void refreshStatus() {
         String enabled = isServiceEnabled() ? "enabled" : "disabled";
         status.setText("Accessibility service: " + enabled + "\nLast status: " + GuardState.lastResult(this));
+        if (gestureStatus != null && gestureButton != null) {
+            boolean gestures = GuardState.gesturesEnabled(this);
+            gestureStatus.setText("Gestures: " + GuardState.gestureStatus(this));
+            gestureButton.setText(gestures
+                    ? "Disable replacement gestures" : "Enable replacement gestures");
+        }
     }
 
     private boolean isServiceEnabled() {
